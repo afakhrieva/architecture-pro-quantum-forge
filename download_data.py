@@ -1,10 +1,10 @@
 import requests
+import re
 import os
 import time
-from urllib.parse import quote
 
 BASE_API_URL = "https://sailormoon.fandom.com/ru/api.php"
-OUTPUT_DIR = "origin"
+OUTPUT_DIR = "knowledge_base/origin"
 REQUEST_DELAY = 0.5
 
 # Список страниц для скачивания
@@ -39,7 +39,6 @@ def download_page_api(page_title):
         # Извлекаем HTML и конвертируем в простой текст
         html_content = data['parse']['text']
         # Простейшая очистка от HTML-тегов
-        import re
         clean_text = re.sub(r'<[^>]+>', ' ', html_content)
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
         return clean_text

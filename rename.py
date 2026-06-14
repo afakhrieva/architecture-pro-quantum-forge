@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 # Загружаем словарь замен
-with open('terms_map.json', 'r', encoding='utf-8') as f:
+with open('knowledge_base/terms_map.json', 'r', encoding='utf-8') as f:
     replacements = json.load(f)
 
 # Создаём словарь для регистронезависимого поиска (ключи в нижнем регистре)
@@ -22,8 +22,8 @@ def replace_terms(text):
         return lowercase_keys.get(matched.lower(), matched)
     return pattern.sub(repl, text)
 
-input_dir = Path('origin')
-output_dir = Path('renamed')
+input_dir = Path('knowledge_base/origin')
+output_dir = Path('knowledge_base/renamed')
 output_dir.mkdir(exist_ok=True)
 
 for file_path in input_dir.glob('*.txt'):

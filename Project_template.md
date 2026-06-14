@@ -33,7 +33,7 @@
 | Безопасность              | Данные не покидают сервер                                                                                                                                                         | Все данные отправляются в OpenAI.                                                                                      |
 | Размерность               | 384–768 (легковесные модели для CPU) или до 4096 (для мощных моделей).                                                                                                            | 1536 (text‑embedding‑3‑small) или 3072 (‑large)                                                                        |
 
-**Вывод по эмбеддингам:** Sentence Transformers, модель `intfloat/multilingual-e5-large` (размерность 1024, поддерживает 100+ языков, включая русский). Если сервер слабый - `all-MiniLM-L6-v2` (384) для прототипа с возможностью апгрейда.
+**Вывод по эмбеддингам:** Sentence Transformers, модель `intfloat/multilingual-e5-large` (размерность 1024, поддерживает 100+ языков, включая русский). Если сервер слабый - `paraphrase-multilingual-MiniLM-L12-v2`/ `all-MiniLM-L6-v2` (384) для прототипа с возможностью апгрейда.
 
 ## Сравнение векторных баз: FAISS vs ChromaDB vs Qdrant
 
@@ -88,7 +88,7 @@
 ### A. Прототип (бюджетный)
 
 - **LLM**: Gemma 4 12B (Ollama)
-- **Эмбеддинги**: `all-MiniLM-L6-v2` (384)
+- **Эмбеддинги**: `paraphrase-multilingual-MiniLM-L12-v2` (384)
 - **Векторная БД**: FAISS (in‑memory)
 - **Оборудование**: Mac mini M4 (16 ГБ RAM) или сервер с CPU
 - **Сильные стороны**: Быстрый старт, низкая стоимость, полный контроль над данными
@@ -128,3 +128,123 @@
    - RTX 4090 или Mac mini M4 Pro даст приемлемую скорость ответа (до 60 токенов/с).
 
 Сценарий C (кластер Qdrant, 70B модели) оставляю на случай, если через год нагрузка вырастет до миллиона запросов в день и потребуется абсолютное качество ответов для сложных аналитических задач.
+
+# Задание 2. Подготовка базы знаний
+
+## Ключевые герои, группы и важные объекты Вселенной Sailor Moon
+
+### Главные герои (Sailor Guardians)
+1. Usagi Tsukino / Sailor Moon (Сейлор Мун)
+2. Ami Mizuno / Sailor Mercury (Сейлор Меркурий)
+3. Rei Hino / Sailor Mars (Сейлор Марс)
+4. Makoto Kino / Sailor Jupiter (Сейлор Юпитер)
+5. Minako Aino / Sailor Venus (Сейлор Венера)
+6. Mamoru Chiba / Tuxedo Mask (Такседо Маск)
+7. Chibiusa / Sailor Chibi Moon (Чибиуса)
+8. Haruka Tenoh / Sailor Uranus (Сейлор Уран)
+9. Michiru Kaioh / Sailor Neptune (Сейлор Нептун)
+10. Setsuna Meiou / Sailor Pluto (Сейлор Плутон)
+11. Hotaru Tomoe / Sailor Saturn (Сейлор Сатурн)
+12. Luna & Artemis (Луна и Артемис)
+13. Queen Serenity (Королева Серенити)
+
+### Злодеи и их организации
+
+Тёмное Королевство (Dark Kingdom):
+14. Queen Beryl (Королева Берилл)
+15. Queen Metalia (Королева Металлия)
+16. Jadeite (Джедайт)
+17. Nephrite (Нефрит)
+18. Zoisite (Зойсайт)
+19. Kunzite (Кунсайт)
+
+Клан Чёрной Луны (Black Moon Clan):
+20. Prince Demande (Принц Алмаз)
+21. Saphir (Сафир) - нет страницы
+22. Wiseman (Мудрец)
+23. Black Lady (Чёрная Леди)
+
+Бесконечность / Смертельные Бастерсы (Death Busters):
+24. Mistress 9 (Госпожа 9)
+25. Pharaoh 90 (Фараон 90) - нет страницы
+26. Professor Tomoe (Соичи Томоэ)
+
+Мёртвая Луна / Цирк Мёртвой Луны (Dead Moon Circus):
+27. Queen Nehelenia (Королева Нехеления)
+28. Amazon Trio (Амазон Трио) - нет страницы
+29. Amazon Quartet (Амазон Квартет) - нет страницы
+
+Shadow Galactica:
+30. Sailor Galaxia (Сейлор Галаксия)
+31. Sailor Animamates (Сейлор Анимамейтс) - нет страницы
+
+### Ключевые артефакты и места
+32. Silver Crystal (Серебряный кристалл)
+33. Golden Crystal (Золотой кристалл)
+34. Moon Stick (Лунный жезл) - нет страницы
+35. Милый лунный жезл
+36. Moon Kingdom & Silver Millennium (Лунное Королевство и Серебряное Тысячелетие)
+37. Tokyo / Juuban District (Токио / Район Дзюбан)
+
+## Что сделано
+
+Создаем виртуальное окружение `.sailor` и активируем его
+```bash
+python3 -m venv .sailor
+source .sailor/bin/activate
+```
+
+Устанавливаем нужные библиотеки
+```bash
+pip3 install requests beautifulsoup4
+```
+
+Запускаем скрипт скачивание файлов из вики https://sailormoon.fandom.com/wiki/Sailor_Moon_Wiki
+```bash
+python3 download_data.py
+```
+
+Запускаем скрипт для переименования
+```bash
+python3 rename.py
+```
+
+В результате получаем базу знаний `~/<папка с проектом>/architecture-pro-quantum-forge/knowledge_base/renamed`
+
+# Задание 3. Создание векторного индекса базы знаний
+
+## Модель эмбеддингов
+- **Название**: `paraphrase-multilingual-MiniLM-L12-v2`
+- **Репозиторий / API**: [Hugging Face Models](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+- **Размер эмбеддингов**: 384
+
+## База знаний
+- **Источник**: 33 статьи из русскоязычной вики «Сейлор Мун»
+- **Обработка**: все ключевые термины заменены на вымышленные (см. `knowledge_base/terms_map.json`)
+
+### Результаты индексации
+- **Количество чанков**: [Указать число после запуска скрипта]
+- **Время генерации**: [Указать время после запуска скрипта, например ~60 секунд]
+
+### Используемые библиотеки
+- `sentence-transformers` (загрузка модели и генерация эмбеддингов)
+- `langchain` (разбивка текста на чанки)
+- `faiss-cpu` (создание и сохранение векторного индекса)
+- `numpy` (работа с массивами векторов)
+
+Активируем окружение `.sailor`, если неактивно
+```bash
+source .sailor/bin/activate
+```
+
+Устанавливаем библиотеки
+```bash
+pip3 install sentence-transformers langchain faiss-cpu numpy
+pip3 install langchain-text-splitters
+pip3 install certifi
+```
+
+Запускаем скрипт
+```bash
+python3 build_index.py
+```
