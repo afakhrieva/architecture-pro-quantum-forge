@@ -1,0 +1,9 @@
+sentence-transformers
+faiss-cpu
+numpy
+langchain-text-splitters
+langchain-ollama
+langchain-core
+requests
+python-dotenv
+python-telegram-bot

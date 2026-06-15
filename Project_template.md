@@ -37,21 +37,21 @@
 
 ## Сравнение векторных баз: FAISS vs ChromaDB vs Qdrant
 
-| Критерий                                  | FAISS                                 | ChromaDB               | Qdrant                           |
-|-------------------------------------------|---------------------------------------|------------------------|----------------------------------|
-| Тип                                       | Библиотека                            | Встраиваемая БД        | Production БД                    |
-| Язык                                      | C++ / Python                          | Python / Rust          | RUST                             |
-| API                                       | C++ / Python                          | Python / REST          | gRPC / REST                      |
-| Горизонтальное масштабирование            | НЕТ                                   | НЕТ                    | Есть (шардирование и репликация) |
-| Персистентность данных                    | Только ручное сохранение индекса      | SQLite + файлы         | RocksDB + WAL                    |
-| Фильтрация по метаданным                  | Только пост‑фильтрация (неэффективно) | Базовая (WHERE clause) | Продвинутая (вложенные AND/OR)   |
-| Поддержка GPU                             | Да (CUDA)                             | НЕТ                    | НЕТ                              |
-| QPS (на CPU, 1 млн векторов)              | 850                                   | 520                    | 720                              |
-| QPS (на CPU, 8 потоков)                   | 4200                                  | 2600                   | 3800                             |
-| QPS (на GPU, 1 млн векторов)              | 6100                                  | -                      | -                                |
-| Потребление памяти (1 млн векторов, 768d) | ~3.5 GB                               | ~4.0 GB                | ~3.2 GB                          |
-| Простота внедрения                        | 2/5 (нужна обвязка)                   | 5/5 (pip install)      | 4/5 (есть готовый образ)         |
-| Production‑готовность                     | 2/5                                   | 2/5                    | 5/5                              |
+| Критерий                                  | FAISS                                                                         | ChromaDB               | Qdrant                           |
+|-------------------------------------------|-------------------------------------------------------------------------------|------------------------|----------------------------------|
+| Тип                                       | Библиотека                                                                    | Встраиваемая БД        | Production БД                    |
+| Язык                                      | C++ / Python                                                                  | Python / Rust          | RUST                             |
+| API                                       | C++ / Python                                                                  | Python / REST          | gRPC / REST                      |
+| Горизонтальное масштабирование            | НЕТ                                                                           | НЕТ                    | Есть (шардирование и репликация) |
+| Персистентность данных                    | Только ручное сохранение индекса                                              | SQLite + файлы         | RocksDB + WAL                    |
+| Фильтрация по метаданным                  | Только пост‑фильтрация (неэффективно)                                         | Базовая (WHERE clause) | Продвинутая (вложенные AND/OR)   |
+| Поддержка GPU                             | Да (CUDA)                                                                     | НЕТ                    | НЕТ                              |
+| QPS (на CPU, 1 млн векторов)              | 850                                                                           | 520                    | 720                              |
+| QPS (на CPU, 8 потоков)                   | 4200                                                                          | 2600                   | 3800                             |
+| QPS (на GPU, 1 млн векторов)              | 6100                                                                          | -                      | -                                |
+| Потребление памяти (1 млн векторов, 768d) | ~3.5 GB                                                                       | ~4.0 GB                | ~3.2 GB                          |
+| Простота внедрения                        | 2/5 (нужна обвязка - сохранять и загружать индекс, хранить метаданные и т.п.) | 5/5 (pip install)      | 4/5 (есть готовый образ)         |
+| Production‑готовность                     | 2/5                                                                           | 2/5                    | 5/5                              |
 
 **FAISS** - это библиотека от Meta для быстрого поиска векторов, а не полноценная база данных. На GPU FAISS показывает феноменальную скорость (6100 QPS), что делает его лучшим инструментом для high‑performance сценариев. Однако он не предоставляет встроенного управления метаданными: фильтрация возможна только пост‑фильтрацией, когда сначала ищутся векторы, а затем из них отсеиваются неподходящие по условию. Это неэффективно при малом количестве релевантных документов.
 
@@ -186,6 +186,8 @@ Shadow Galactica:
 36. Moon Kingdom & Silver Millennium (Лунное Королевство и Серебряное Тысячелетие)
 37. Tokyo / Juuban District (Токио / Район Дзюбан)
 
+Словарь замены имен - [terms_map.json](knowledge_base/terms_map.json)
+
 ## Что сделано
 
 Создаем виртуальное окружение `.sailor` и активируем его
@@ -206,8 +208,9 @@ python3 download_data.py
 
 Запускаем скрипт для переименования
 ```bash
-python3 rename.py
+python3 rename_data.py
 ```
+Также немного руками подправила некоторые файлы, так как данные все равно сильно зашумлены и модель не может найти релевантные документы.
 
 В результате получаем базу знаний `~/<папка с проектом>/architecture-pro-quantum-forge/knowledge_base/renamed`
 
@@ -220,7 +223,7 @@ python3 rename.py
 
 ## База знаний
 - **Источник**: 33 статьи из русскоязычной вики «Сейлор Мун»
-- **Обработка**: все ключевые термины заменены на вымышленные (см. `knowledge_base/terms_map.json`)
+- **Обработка**: все ключевые термины заменены на вымышленные (см. [terms_map.json](knowledge_base/terms_map.json))
 
 ### Результаты индексации
 - **Количество чанков**: 227
@@ -248,3 +251,72 @@ pip3 install certifi
 ```bash
 python3 build_index.py
 ```
+
+![03_test_index_search.png](images/03_test_index_search.png)
+
+# Задание 4. Реализация RAG-бота с техниками промптинга
+
+## Установка Ollama и библиотек для бота
+
+Установка Ollama и скачивание модели
+```bash
+brew install ollama
+ollama serve
+ollama pull qwen2.5:7b
+```
+
+Активируем окружение `.sailor`, если неактивно
+```bash
+source .sailor/bin/activate
+```
+
+Установка нужных пакетов
+```bash
+pip3 install langchain langchain-core langchain-ollama
+pip3 install ollama
+```
+
+## Запуск бота
+```bash
+python3 rag_bot.py
+```
+
+## Скриншоты с ответами
+1. ![04_answer_1.png](images/04_answer_1.png)
+2. ![04_answer_2.png](images/04_answer_2.png)
+3. ![04_answer_3.png](images/04_answer_3.png)
+4. ![04_answer_4.png](images/04_answer_4.png)
+5. ![04_answer_5.png](images/04_answer_5.png)
+
+## Скриншоты без ответов
+1. ![04_no_answer_1.png](images/04_no_answer_1.png)
+2. ![04_no_answer_2.png](images/04_no_answer_2.png)
+3. ![04_no_answer_3.png](images/04_no_answer_3.png)
+4. ![04_no_answer_4.png](images/04_no_answer_4.png)
+5. ![04_no_answer_5.png](images/04_no_answer_5.png)
+
+## Telegram-бот
+
+@sailor_masha_bot
+
+Установим библиотеку для Telegram
+```bash
+pip3 install python-telegram-bot
+pip3 install python-dotenv
+```
+
+Запуск бота
+```bash
+python3 telegram_bot.py
+```
+
+### Скриншоты с ответами
+
+1. ![answer_1.png](images/telegram/answer_1.png)
+2. ![answer_2.png](images/telegram/answer_2.png)
+3. ![answer_3.png](images/telegram/answer_3.png)
+
+### Скриншоты без ответов
+
+1. ![no_answer_1.png](images/telegram/no_answer_1.png)
+2. ![no_answer_2.png](images/telegram/no_answer_2.png)
