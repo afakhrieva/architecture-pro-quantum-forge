@@ -342,4 +342,41 @@ python3 telegram_bot.py
 
 Сриншоты ответов на обычные вопросы приведены в Задании 4
 
+# Задание 6. Автоматическое ежедневное обновление базы знаний
+
+## Новые документы
+
+Скачаем несколько новых статей в папку `./knowledge_base/incoming/origin` и обновим `terms_maps.json`: 
+1. Зойсайт
+2. Эйл
+3. Анна
+4. Каолинит
+5. Тигровый Глаз
+6. Сейлор Железная Мышь
+
+## Обновление индекса
+
+```
+python3 update_index.py
+```
+**Размер индекса после обновления:** 253 векторов \
+**Длительность обновления:** 13.18 сек.
+
+## Настройка периодического запуска (cron)
+
+Запуск `update_index.py` каждый день в 6:00. (Пути на моем маке)
+```
+crontab -e
+
+0 6 * * * cd /Users/afakhrieva/cursor_projects/architecture-pro-quantum-forge && /Users/afakhrieva/cursor_projects/architecture-pro-quantum-forge/.sailor/bin/python update_index.py >> /Users/afakhrieva/cursor_projects/architecture-pro-quantum-forge/update_cron.log 2>&1
+```
+
+Проверить, что все добавлено
+```
+crontab -l
+```
+
+## Диаграмма
+
+![index_update.png](diagrams/index_update.png)
 
