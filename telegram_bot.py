@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-from rag_bot import retrieve, generate_answer
+from rag_bot import retrieve, generate_answer, log_query
 
 # Настройка логирования
 logging.basicConfig(
@@ -46,7 +46,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # 2. Генерация ответа
         answer = generate_answer(question, docs)
 
-        # 3. Формируем ответ с источниками
+        # 3. Логируем запрос
+        log_query(question, docs, answer, "success")
+
+        # 4. Формируем ответ с источниками
         sources = "\n".join([f"{d['source']} (score: {d['score']:.2f})" for d in docs])
         response = f"{answer}\n\nИсточники:\n{sources}"
 
@@ -58,6 +61,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logging.error(f"Ошибка: {e}")
+        # Логируем ошибку как failure
+        log_query(question, [], f"Ошибка: {e}", "failure")
         await update.message.reply_text("Произошла ошибка. Попробуйте позже.")
 
 def main():

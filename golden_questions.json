@@ -1,0 +1,14 @@
+[
+  {"question": "Кто такая Маша Пирогова?", "expect_success": true},
+  {"question": "Кто такой Коля Светлов?", "expect_success": true},
+  {"question": "Где обитает Царица Железяка?", "expect_success": true},
+  {"question": "Что такое Тёмная Страна?", "expect_success": true},
+  {"question": "Как зовут дочь профессора Вася Пупкин?", "expect_success": true},
+  {"question": "Кто такая Оля Громова?", "expect_success": true},
+  {"question": "Кто такая Катя Любова?", "expect_success": true},
+  {"question": "Кто такая Мурка?", "expect_success": false},
+  {"question": "Кто такой Кот Васька?", "expect_success": false},
+  {"question": "Что такое Лунная Страна?", "expect_success": true},
+  {"question": "Кто такая Царица Маша Старшая?", "expect_success": false},
+  {"question": "Какой сегодня курс доллара?", "expect_success": false}
+]

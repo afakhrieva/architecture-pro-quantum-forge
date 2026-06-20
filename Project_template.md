@@ -380,3 +380,25 @@ crontab -l
 
 ![index_update.png](diagrams/index_update.png)
 
+# Задание 7. Аналитика покрытия и качества базы знаний
+
+## Внесение искусственных пробелов в базу
+
+Удаляем следующие файлы:
+
+1. Луна.txt (Мурка)
+2. Артемис.txt (Кот Васька)
+3. Королева_Серенити.txt (Царица Маша Старшая)
+4. Лунная_Палочка.txt
+
+Также добавлениям логирование в файл [logs.jsonl](logs.jsonl)
+
+## Автоматическое тестирование
+
+"Золотой набор" вопросов тут [golden_questions.json](golden_questions.json) 
+
+Запуск теста на "золотом наборе"
+```bash
+python3 evaluate.py
+```
+Результаты будут в `evaluation_results.jsonl` и `evaluation_summary.json`.

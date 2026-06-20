@@ -1,3 +1,4 @@
+import json
 import os
 if 'SSL_CERT_FILE' in os.environ:
     # Удаляем неверный путь
@@ -10,10 +11,12 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
+from datetime import datetime
 
 # ========== 1. ЗАГРУЗКА ИНДЕКСА И МЕТАДАННЫХ ==========
 INDEX_DIR = "faiss_index"
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+LOG_FILE = "logs.jsonl"
 
 print("Загрузка индекса FAISS...")
 index = faiss.read_index(f"{INDEX_DIR}/faiss.index")
@@ -23,6 +26,21 @@ print(f"Индекс загружен, количество чанков: {index
 
 print("Загрузка модели эмбеддингов...")
 embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+
+def log_query(question: str, docs: list, answer: str, status: str):
+    """Записывает запрос и результат в JSONL-лог."""
+    entry = {
+        "timestamp": datetime.now().isoformat(),
+        "question": question,
+        "found_chunks": bool(docs),
+        "num_chunks": len(docs),
+        "sources": [d["source"] for d in docs] if docs else [],
+        "answer": answer,
+        "answer_length": len(answer),
+        "status": status  # "success" или "failure"
+    }
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 def clean_surrogates(text: str) -> str:
     """Удаляет суррогатные пары Unicode и другие недопустимые символы."""
