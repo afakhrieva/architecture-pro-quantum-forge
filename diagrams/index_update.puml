@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Container>
+
+Person(user, "Разработчик / администратор", "Кладет новые документы в папку incoming")
+
+' Система
+System_Boundary(rag_system, "Система автоматического обновления базы знаний") {
+
+    ' Планировщик
+    Container(cron, "Планировщик cron", "cron", "Запускает update_index.py каждый день в 6:00")
+
+    ' Скрипты
+    Container(update_script, "Скрипт обновления", "Python (update_index.py)", "Обнаруживает новые файлы, применяет замену терминов, запускает индексацию")
+    Container(build_script, "Скрипт индексации", "Python (build_index.py)", "Генерирует чанки, эмбеддинги и строит FAISS индекс")
+    Container(rename_lib, "Модуль замены терминов", "Python (rename_data.py)", "Содержит логику замены терминов на основе terms_map.json")
+
+    ' Хранилища
+    ContainerDb(incoming_folder, "Папка incoming", "Файловая система", "Место для новых документов")
+    ContainerDb(renamed_folder, "Папка renamed", "Файловая система", "Актуальные документы с заменёнными терминами")
+    ContainerDb(faiss_index, "FAISS индекс", "FAISS", "Векторный индекс и метаданные")
+    ContainerDb(log_files, "Лог-файлы", "Файловая система", "update.log, update_cron.log")
+}
+
+Rel(user, incoming_folder, "Кладет новые файлы")
+Rel(cron, update_script, "Запускает")
+Rel(update_script, incoming_folder, "Читает файлы", "сравнивает имена")
+Rel(update_script, rename_lib, "Импортирует replace_terms()", "использует")
+Rel(update_script, renamed_folder, "Сохраняет обработанные файлы", "с заменой терминов")
+Rel(update_script, build_script, "Запускает", "subprocess")
+Rel(build_script, renamed_folder, "Читает все файлы")
+Rel(build_script, faiss_index, "Строит/обновляет индекс")
+Rel(update_script, log_files, "Пишет логи", "logging")
+Rel(cron, log_files, "Перенаправляет stdout/stderr", ">> update_cron.log 2>&1")
+
+@enduml
